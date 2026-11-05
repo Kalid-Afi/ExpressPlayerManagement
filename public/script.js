@@ -22,6 +22,49 @@ async function loadPlayers() {
 
         const actionsCell = document.createElement("td");
 
+        // UPDATE - Skapa Edit-knappen
+        const editButton = document.createElement("button");
+        editButton.textContent = "Edit";
+
+        // När användaren klickar på Edit
+        editButton.addEventListener("click", async () => {
+
+            // Fråga efter ett nytt namn
+            const newName = prompt("Enter new name:", player.name);
+
+            // Avbryt om användaren klickar Cancel
+            if (newName === null) {
+                return;
+            }
+
+            // Fråga efter en ny poäng
+            const newScore = prompt("Enter new score:", player.score);
+
+            if (newScore === null) {
+                return;
+            }
+
+            // Skicka uppdateringen till Express-servern
+            const response = await fetch(`/players/${player.id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: newName,
+                    score: Number(newScore)
+                })
+            });
+
+            if (!response.ok) {
+                alert("Could not update player. Check name and score.");
+                return;
+            }
+
+            // Uppdatera tabellen
+            loadPlayers();
+        });
+
         // DELETE - Skapa en knapp för att ta bort spelaren
         const deleteButton = document.createElement("button");
         deleteButton.textContent = "Delete";
@@ -51,7 +94,7 @@ async function loadPlayers() {
         });
 
         // Lägg Delete-knappen i Actions-cellen
-        actionsCell.appendChild(deleteButton);
+        actionsCell.append(editButton, deleteButton);
 
         row.append(idCell, nameCell, scoreCell, actionsCell);
         table.appendChild(row);
