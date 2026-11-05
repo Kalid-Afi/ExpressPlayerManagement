@@ -1,0 +1,42 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Management</title>
+</head>
+<script src="/script.js"></script>
+<body>
+    <h1>Player Management System</h1>
+    <p>Manage players and their scores.</p>
+
+    <h2>Add New Player</h2>
+
+    <form id="playerForm">
+        <label for="playerName">Player Name:</label>
+        <input type="text" id="playerName" required>
+
+        <label for="playerScore">Score:</label>
+        <input type="number" id="playerScore" min="0" required>
+
+        <button type="submit">Add Player</button>
+    </form>
+
+    <h2>Players</h2>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Score</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="playersTable">
+            <!-- Players will be displayed here -->
+        </tbody>
+    </table>
+</body>
+</html>

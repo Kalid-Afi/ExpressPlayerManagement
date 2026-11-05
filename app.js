@@ -5,6 +5,7 @@ const PORT = 3000;
 
 //Express kan läsa JSON-data från förfrågningar
 app.use(express.json());
+app.use(express.static("public"));
 
 // Tillfällig lista med spelare
 let players = [
@@ -13,10 +14,6 @@ let players = [
     { id: 3, name: "Player Three", score: 80 }
 ];
 
-// Startsidan
-app.get("/", (req, res) => {
-    res.send("Welcome to Player Management System!");
-});
 
 // READ - Visa alla spelare
 app.get("/players", (req, res) => {
