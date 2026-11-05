@@ -22,6 +22,37 @@ async function loadPlayers() {
 
         const actionsCell = document.createElement("td");
 
+        // DELETE - Skapa en knapp för att ta bort spelaren
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+
+        // Vad händer när användaren klickar på knappen?
+        deleteButton.addEventListener("click", async () => {
+
+            // Fråga användaren om den vill ta bort spelaren
+            const confirmed = confirm(`Do you want to delete ${player.name}?`);
+
+            if (!confirmed) {
+                return;
+            }
+
+            // Skicka DELETE-förfrågan till Express-servern
+            const response = await fetch(`/players/${player.id}`, {
+                method: "DELETE"
+            });
+
+            if (!response.ok) {
+                alert("Could not delete player.");
+                return;
+            }
+
+            // Uppdatera spelarlistan
+            loadPlayers();
+        });
+
+        // Lägg Delete-knappen i Actions-cellen
+        actionsCell.appendChild(deleteButton);
+
         row.append(idCell, nameCell, scoreCell, actionsCell);
         table.appendChild(row);
     });
