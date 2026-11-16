@@ -1,113 +1,109 @@
+
 const express = require("express");
+const db = require("./database");
 
 const app = express();
 const PORT = 3000;
 
-//Express kan läsa JSON-data från förfrågningar
 app.use(express.json());
 app.use(express.static("public"));
 
-// Tillfällig lista med spelare
-let players = [
-    { id: 1, name: "Player One", score: 120 },
-    { id: 2, name: "Player Two", score: 95 },
-    { id: 3, name: "Player Three", score: 80 }
-];
-
+// Kontrollera spelarens uppgifter
+function isValidPlayer(name, score) {
+  return (
+    typeof name === "string" &&
+    name.trim().length > 0 &&
+    typeof score === "number" &&
+    Number.isFinite(score) &&
+    score >= 0
+  );
+}
 
 // READ - Visa alla spelare
 app.get("/players", (req, res) => {
-    res.json(players);
+  const players = db.prepare("SELECT * FROM players").all();
+
+  res.json(players);
 });
 
 // CREATE - Lägg till en ny spelare
 app.post("/players", (req, res) => {
-    const { name, score } = req.body;
+  const { name, score } = req.body || {};
 
-    // Kontrollera att informationen är giltig
-    if (typeof name !== "string" || !name.trim() ||
-        typeof score !== "number" || !Number.isFinite(score) || score < 0) {
-        return res.status(400).json({
-            message: "Enter a valid name and score."
-        });
-    }
+  if (!isValidPlayer(name, score)) {
+    return res.status(400).json({
+      message: "Enter a valid name and score."
+    });
+  }
 
-    // Skapa ett unikt ID
-    const newId = players.length > 0
-        ? Math.max(...players.map(player => player.id)) + 1
-        : 1;
+  const result = db.prepare(
+    "INSERT INTO players (name, score) VALUES (?, ?)"
+  ).run(name.trim(), score);
 
-    const newPlayer = {
-        id: newId,
-        name: name.trim(),
-        score: score
-    };
+  const newPlayer = db.prepare(
+    "SELECT * FROM players WHERE id = ?"
+  ).get(result.lastInsertRowid);
 
-    players.push(newPlayer);
-
-    res.status(201).json(newPlayer);
+  res.status(201).json(newPlayer);
 });
 
-// UPDATE - Uppdatera en befintlig spelare
+// UPDATE - Uppdatera en spelare
 app.put("/players/:id", (req, res) => {
-    const id = Number(req.params.id);
-    const { name, score } = req.body || {};
+  const id = Number(req.params.id);
+  const { name, score } = req.body || {};
 
-    // Hitta spelaren med rätt ID
-    const player = players.find(player => player.id === id);
+  const player = db.prepare(
+    "SELECT * FROM players WHERE id = ?"
+  ).get(id);
 
-    if (!player) {
-        return res.status(404).json({
-            message: "Player not found."
-        });
-    }
+  if (!player) {
+    return res.status(404).json({
+      message: "Player not found."
+    });
+  }
 
-    // Kontrollera informationen
-    if (
-        typeof name !== "string" ||
-        !name.trim() ||
-        typeof score !== "number" ||
-        !Number.isFinite(score) ||
-        score < 0
-    ) {
-        return res.status(400).json({
-            message: "Enter a valid name and score."
-        });
-    }
+  if (!isValidPlayer(name, score)) {
+    return res.status(400).json({
+      message: "Enter a valid name and score."
+    });
+  }
 
-    // Uppdatera spelaren
-    player.name = name.trim();
-    player.score = score;
+  db.prepare(
+    "UPDATE players SET name = ?, score = ? WHERE id = ?"
+  ).run(name.trim(), score, id);
 
-    res.json(player);
+  const updatedPlayer = db.prepare(
+    "SELECT * FROM players WHERE id = ?"
+  ).get(id);
+
+  res.json(updatedPlayer);
 });
 
 // DELETE - Ta bort en spelare
 app.delete("/players/:id", (req, res) => {
-    const id = Number(req.params.id);
+  const id = Number(req.params.id);
 
-    // Hitta spelarens position i listan
-    const playerIndex = players.findIndex(player => player.id === id);
+  const player = db.prepare(
+    "SELECT * FROM players WHERE id = ?"
+  ).get(id);
 
-    // Kontrollera om spelaren finns
-    if (playerIndex === -1) {
-        return res.status(404).json({
-            message: "Player not found."
-        });
-    }
-
-    // Ta bort spelaren
-    const deletedPlayer = players.splice(playerIndex, 1)[0];
-
-    res.json({
-        message: "Player deleted successfully.",
-        player: deletedPlayer
+  if (!player) {
+    return res.status(404).json({
+      message: "Player not found."
     });
-});
+  }
 
+  db.prepare(
+    "DELETE FROM players WHERE id = ?"
+  ).run(id);
+
+  res.json({
+    message: "Player deleted successfully.",
+    player: player
+  });
+});
 
 // Starta servern
 app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });
-
