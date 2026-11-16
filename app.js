@@ -22,7 +22,6 @@ function isValidPlayer(name, score) {
 // READ - Visa alla spelare
 app.get("/players", (req, res) => {
   const players = db.prepare("SELECT * FROM players").all();
-
   res.json(players);
 });
 
